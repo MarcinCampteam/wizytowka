@@ -3,101 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wizytówka SuliCamp Camping 271</title>
+    <title>Wizytówki Kempingów</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
             background-color: #f5f5f5;
+            color: #333;
         }
-
-        .card {
-            max-width: 600px;
+        .container {
+            max-width: 800px;
             margin: 20px auto;
-            background: #fff;
+            padding: 20px;
+            background: white;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
-
-        .card-header {
-            background-color: #15830d;
-            color: white;
-            padding: 20px;
-            text-align: center;
+        .card {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
         }
-
-        .card-header h1 {
-            margin: 0;
-            font-size: 24px;
-        }
-
-        .card-header p {
-            margin: 5px 0 0;
-            font-size: 16px;
-        }
-
-        .card-body {
-            padding: 20px;
-        }
-
-        .card-body h2 {
-            margin-top: 0;
-            font-size: 20px;
+        .card h2 {
+            margin: 0 0 10px;
             color: #15830d;
         }
-
-        .card-body p {
-            margin: 10px 0;
-            font-size: 16px;
+        .card p {
+            margin: 5px 0;
             line-height: 1.5;
         }
-
-        .card-body a {
+        .card a {
             display: inline-block;
             margin-top: 10px;
+            padding: 10px 15px;
+            background-color: #15830d;
+            color: white;
             text-decoration: none;
-            color: #fff;
-            background: #15830d;
-            padding: 10px 20px;
             border-radius: 5px;
-            margin-right: 10px;
         }
-
-        .card-body a:hover {
-            background: #0e5a08;
+        .card a:hover {
+            background-color: #0e5a08;
         }
     </style>
 </head>
 <body>
-    <div class="card">
-        <div class="card-header">
-            <h1>SuliCamp Camping 271</h1>
-            <p>Sulistrowice, Polska</p>
-        </div>
-        <div class="card-body">
-            <h2>Informacje</h2>
-            <p><strong>Adres:</strong> Sulistrowice, Polska</p>
-            <p><strong>Współrzędne:</strong> 50.866226, 16.787173</p>
-            <p><strong>Telefon:</strong> <a href="tel:+48123456789">+48 123 456 789</a></p>
-            <p><strong>Strona internetowa:</strong> <a href="https://sulicamp.pl" target="_blank">sulicamp.pl</a></p>
-
-            <h2>Opis</h2>
-            <p>
-                Położony w malowniczych Sulistrowicach, SuliCamp Camping 271 to idealne miejsce dla rodzin z dziećmi oraz miłośników natury.
-                Camping oferuje dostęp do jeziora, miejsce na ognisko oraz nowoczesne udogodnienia sanitarno-higieniczne. 
-                Znajdują się tu przestronne miejsca dla namiotów i kamperów, a także dostęp do elektryczności i bieżącej wody.
-            </p>
-            <p>
-                W pobliżu campingu znajduje się wiele atrakcji turystycznych, takich jak Ślężański Park Krajobrazowy oraz liczne szlaki piesze i rowerowe.
-                Goście mogą cieszyć się ciszą i spokojem, z dala od zgiełku miasta.
-            </p>
-
-            <!-- Linki akcji -->
-            <a href="https://www.google.com/maps?q=50.866226,16.787173" target="_blank">Pokaż na Mapach Google</a>
-            <a href="https://www.campteam.pl/dodaj/dodaj-zdj%C4%99cie-lub-opini%C4%99" target="_blank">Dodaj zdjęcie lub opinię</a>
-        </div>
+    <div class="container" id="cards-container">
+        <h1>Wizytówki Kempingów</h1>
     </div>
+
+    <script>
+        const kmlUrl = "https://raw.githubusercontent.com/MarcinCampteam/lista-kempingow/refs/heads/main/map.kml";
+        const linksUrl = "https://raw.githubusercontent.com/MarcinCampteam/map-links/refs/heads/main/links.json";
+
+        async function fetchAndDisplayCards() {
+            try {
+                // Pobierz pliki
+                const [kmlResponse, linksResponse] = await Promise.all([
+                    fetch(kmlUrl),
+                    fetch(linksUrl)
+                ]);
+
+                if (!kmlResponse.ok || !linksResponse.ok) {
+                    throw new Error("Nie udało się pobrać danych.");
+                }
+
+                const kmlText = await kmlResponse.text();
+                const links = await linksResponse.json();
+
+                // Parsuj plik KML
+                const parser = new DOMParser();
+                const kml = parser.parseFromString(kmlText, "application/xml");
+                const placemarks = kml.getElementsByTagName("Placemark");
+
+                // Szukaj lokalizacji
+                const container = document.getElementById("cards-container");
+                for (const placemark of placemarks) {
+                    const name = placemark.getElementsByTagName("name")[0]?.textContent.trim();
+                    const description = placemark.getElementsByTagName("description")[0]?.textContent.trim() || "Brak opisu.";
+                    const coordinates = placemark.getElementsByTagName("coordinates")[0]?.textContent.trim();
+                    const link = links[name] || null;
+
+                    if (!link) continue;
+
+                    // Twórz wizytówkę
+                    const card = document.createElement("div");
+                    card.className = "card";
+                    card.innerHTML = `
+                        <h2>${name}</h2>
+                        <p><strong>Opis:</strong> ${description}</p>
+                        <p><strong>Koordynaty:</strong> ${coordinates}</p>
+                        <a href="${link}" target="_blank">Przejdź do szczegółów</a>
+                    `;
+                    container.appendChild(card);
+                }
+            } catch (error) {
+                console.error("Wystąpił błąd:", error);
+            }
+        }
+
+        fetchAndDisplayCards();
+    </script>
 </body>
 </html>
